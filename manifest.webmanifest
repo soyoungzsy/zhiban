@@ -1,0 +1,17 @@
+{
+  "name": "植伴 · 家庭植物养护",
+  "short_name": "植伴",
+  "description": "管理家里种下的每一盆植物：本周重点、哪里不对排查、五行小卡与整屋批量建档。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f8f4",
+  "theme_color": "#2d6a4f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

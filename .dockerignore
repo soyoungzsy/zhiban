@@ -1,0 +1,11 @@
+node_modules
+test
+test-results
+screenshots
+.git
+.env
+server/.env
+*.zip
+*.md
+.DS_Store
+Dockerfile.tmp

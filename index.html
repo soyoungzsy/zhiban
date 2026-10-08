@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#2d6a4f" />
+  <meta name="description" content="植伴 · 中文家庭植物养护：管理家里已种的每一盆植物，打开就知道本周最值得关注的养护事项。" />
+  <title>植伴 · 家庭植物养护</title>
+  <link rel="stylesheet" href="css/app.css" />
+
+  <!-- v5 PWA：加到手机主屏幕（standalone 打开，图标与主题色见下） -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="植伴" />
+</head>
+<body>
+  <!-- 应用外壳：桌面端限宽居中，模拟手机视口 -->
+  <div class="app-shell">
+    <div id="view" class="view"></div>
+
+    <!-- 底部主标签（由 main.js 按 route 控制显示与选中态） -->
+    <nav id="tabbar" class="tabbar" aria-label="主导航">
+      <a href="#/home" class="tab" data-tab="home" aria-label="首页">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6 12.9 4.5l7.8 7.1H18.6V20h-4.4v-5.2H9.8V20H5.4v-8.4H3.3l7.8-7.1z"/></svg>
+        <span>首页</span>
+      </a>
+      <a href="#/add" class="tab tab-add" data-tab="add" aria-label="拍照建档">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.25 6.75h1.5v4.5h4.5v1.5h-4.5v4.5h-1.5v-4.5h-4.5v-1.5h4.5z"/></svg>
+        <span>建档</span>
+      </a>
+      <a href="#/settings" class="tab" data-tab="settings" aria-label="设置">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2zm-8.3 2.6.1-1.3 2-.6.5-1.2-1-1.8 1-.9 1.8 1 1.2-.5.6-2h1.3l.6 2 1.2.5 1.8-1 1 .9-1 1.8.5 1.2 2 .6-.1 1.3-2 .6-.5 1.2 1 1.8-1 .9-1.8-1-1.2.5-.6 2h-1.3l-.6-2-1.2-.5-1.8 1-1-.9 1-1.8-.5-1.2z"/></svg>
+        <span>设置</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- 覆盖式子页（档案/建档/健康检查/说一说/小卡）渲染在此 -->
+  <div id="stack-root" class="stack-root"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
