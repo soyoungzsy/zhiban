@@ -45,8 +45,8 @@ console.log('A 安装条件（manifest/图标/key 注入）');
 {
   const { ctx, p } = await fresh();
   const m = await p.evaluate(async () => await (await fetch('manifest.webmanifest')).json());
-  ok('A1 manifest：standalone + start_url / + 图标≥3（含 maskable）',
-    m.display === 'standalone' && m.start_url === '/' && m.icons.length >= 3 && m.icons.some(i => i.purpose === 'maskable'),
+  ok('A1 manifest：standalone + start_url ./（根路径/子路径双兼容）+ 图标≥3（含 maskable）',
+    m.display === 'standalone' && (m.start_url === '/' || m.start_url === './') && m.icons.length >= 3 && m.icons.some(i => i.purpose === 'maskable'),
     JSON.stringify(m.icons && m.icons.length));
   const key = await p.evaluate(() => window.__ZH_KEY);
   ok('A2 服务端向页面注入访问 key（源码与缓存不写死）', key === 'test123', `key=${key}`);
