@@ -1,5 +1,25 @@
 # Soya Zhiban · Home Plant Care
 
+**Keep household plant records, organize care problems such as yellow leaves and explore care suggestions.**
+
+## Start here if you do not code
+
+This is a small household plant-care app: keep a record of each plant and explore care suggestions when leaves or growth change. It does not diagnose a plant or prescribe pesticide doses.
+
+**No one-click public demo has been verified in this review.** The full app needs someone to complete the computer setup below. You do not need to copy commands you do not understand. To try the idea first, copy this into an AI chat:
+
+```text
+Help me organize a fictional plant-care problem: an indoor pothos in bright indirect light has two yellow leaves. Ask about watering, light and soil before suggesting possible causes, low-risk observations and when to seek expert help. Do not diagnose or prescribe pesticides.
+```
+
+Expect questions and observation suggestions. This does not create plant records or install the full app. Your AI service may charge fees; use non-sensitive text.
+
+If someone helps set up the app, first add a fictional plant manually, close the page and reopen it to check that the record remains. Photo recognition and weather are optional services requiring extra setup; relevant photos or location details may leave your device. Avoid faces, home addresses and work materials. Read the data notes before using them.
+
+The commands and hosting sections below are for helpers and developers. Current access protection has known gaps: do not connect paid services and expose the app to the public as-is. The **Issues** tab is a public question area; remove private/work information before posting.
+
+
+
 Keep local records of the plants you already own, organize them by placement, investigate symptoms and generate printable five-line care cards. Optional photo recognition and weather features require configured external services.
 
 [中文](README.md) · [Deployment](DEPLOY.md) · [Maintenance and recovery](MAINTENANCE.md)
