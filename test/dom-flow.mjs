@@ -271,7 +271,7 @@ console.log('S8 设置页（备份与归档找回入口）');
   V.settings.render(viewRoot);
   check('存在"导出备份文件"', !!$('#s-export', viewRoot));
   check('存在"从备份文件恢复"输入', !!$('#s-import', viewRoot));
-  check('版本行含 v5.0（线上主屏幕版）', /v5\.0/.test(text(viewRoot)));
+  check('版本行含 v5.1.0（访问保护更新）', /v5\.1\.0/.test(text(viewRoot)));
   check('归档家庭有找回入口', !!$('#s-archexport', viewRoot) || S.listFamilies().filter(f => f.archived && !f.isExample).length === 0);
 }
 

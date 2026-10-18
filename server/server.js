@@ -17,6 +17,7 @@
 // 凭证：见 server/.env.example；.env 不提交、不打包、不在浏览器出现。
 // ============================================================
 import http from 'node:http';
+import { accessAllowed, clientAddress, positiveLimit, reserveDaily } from './security.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -44,6 +45,9 @@ function loadEnv() {
 const envFile = loadEnv();
 const CFG = {
   port: Number(process.env.PORT || envFile.PORT || 8438),
+  host: process.env.HOST || envFile.HOST || '127.0.0.1',
+  publicHttps: (process.env.PUBLIC_HTTPS || envFile.PUBLIC_HTTPS) === '1',
+  ledgerDir: process.env.USAGE_DIR || envFile.USAGE_DIR || path.join(here, '.runtime'),
   zhipuKey: process.env.ZHIPU_API_KEY || envFile.ZHIPU_API_KEY || '',
   glmModel: process.env.GLM_MODEL || envFile.GLM_MODEL || 'glm-4.6v',
   zwHost: (process.env.QWEATHER_API_HOST || envFile.QWEATHER_API_HOST || '').replace(/\/+$/, ''),
@@ -55,14 +59,20 @@ const CFG = {
   weatherPerMin: Number(process.env.WEATHER_PER_MIN || envFile.WEATHER_PER_MIN || 30),
 };
 
+for (const name of ['visionDailyLimit', 'visionPerMin', 'weatherPerMin']) CFG[name] = positiveLimit(CFG[name], name);
+const paid = Boolean(CFG.zhipuKey || CFG.zwKey);
+if (paid && CFG.apiAccessKey.length < 32) throw new Error('Paid services require API_ACCESS_KEY with at least 32 characters');
+if (paid && !['127.0.0.1', '::1', 'localhost'].includes(CFG.host) && !CFG.publicHttps) throw new Error('Remote paid services require HTTPS termination and PUBLIC_HTTPS=1');
+const WEATHER_DAILY_LIMIT = positiveLimit(process.env.WEATHER_DAILY_LIMIT || envFile.WEATHER_DAILY_LIMIT || 500, 'WEATHER_DAILY_LIMIT');
+function reserve(service, limit) {
+  try { return reserveDaily(path.join(CFG.ledgerDir, service + '.json'), limit); }
+  catch { return null; }
+}
+
 const ZHIPU_CHAT_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 
 /* ---------------- 访问控制与限流（v5 上线：付费接口不裸奔） ---------------- */
-const clientIP = req => {
-  const fwd = req.headers['x-forwarded-for'];
-  if (typeof fwd === 'string' && fwd) return fwd.split(',')[0].trim();
-  return req.socket && req.socket.remoteAddress || 'local';
-};
+const clientIP = clientAddress;
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const RLV = { perMin: new Map(), day: todayStr(), dayUsed: 0 };
 const RLW = { perMin: new Map() };
@@ -89,15 +99,12 @@ function checkWeather(req) {
   if (!takeToken(RLW.perMin, clientIP(req), CFG.weatherPerMin)) return { ok: false, msg: '天气请求太频繁，稍后再试' };
   return { ok: true };
 }
-function checkKey(req) {
-  if (!CFG.apiAccessKey) return true;              // 未配置=本地开发模式，不校验
-  return req.headers['x-zh-key'] === CFG.apiAccessKey;
-}
-const unauthorized = res => send(res, 401, { error: 'unauthorized', msg: '需要访问密钥（x-zh-key）。这是保护付费接口的轻量门槛，不是账号系统。' });
+const checkKey = req => accessAllowed(req, CFG.apiAccessKey);
+const unauthorized = res => send(res, 401, { error: 'unauthorized', msg: '请在设置中输入部署人提供的访问口令，再重试。不要输入第三方模型密钥。' });
 
 /* ---------------- 工具 ---------------- */
 function send(res, status, obj) {
-  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
+  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
   res.end(JSON.stringify(obj));
 }
 function readBody(req, limit = 5 * 1024 * 1024) {   // v5 上线收紧（分析图 jpeg 足够，超大体说明误传）
@@ -161,6 +168,8 @@ async function proxyQweather(res, pathname, params) {
       msg: '和风天气未配置：在 server/.env 填写 QWEATHER_API_HOST 与 QWEATHER_KEY（获取方式见 server/.env.example）。',
     });
   }
+  const budget = reserve('weather', WEATHER_DAILY_LIMIT);
+  if (budget !== true) return send(res, budget === false ? 429 : 503, { error: 'weather-budget', msg: '天气额度已用完或额度记录不可用；本次没有调用外部服务。' });
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
@@ -168,9 +177,9 @@ async function proxyQweather(res, pathname, params) {
     const body = await r.text();
     let data = null;
     try { data = JSON.parse(body); } catch (e) { data = { raw: body.slice(0, 500) }; }
-    if (r.status === 401 || r.status === 403) return send(res, r.status, { error: 'qweather-auth', msg: '和风鉴权失败或权限不足', data });
-    if (r.status === 429) return send(res, 429, { error: 'qweather-rate-limit', msg: '和风限流：稍后再试', data });
-    if (!r.ok) return send(res, r.status, { error: 'qweather-http', msg: `和风 HTTP ${r.status}`, data });
+    if (r.status === 401 || r.status === 403) return send(res, r.status, { error: 'qweather-auth', msg: '和风鉴权失败或权限不足' });
+    if (r.status === 429) return send(res, 429, { error: 'qweather-rate-limit', msg: '和风限流：稍后再试' });
+    if (!r.ok) return send(res, r.status, { error: 'qweather-http', msg: `和风 HTTP ${r.status}` });
     /* 注：观测/预报时间一律用和风数据体内的 obsTime/fxTime 等字段；fetchedAt 是代理获取时间，
        两者在前端明确区分，不把请求时间冒充观测时间（v4 §5）。 */
     return send(res, 200, { ok: true, fetchedAt: Date.now(), data });
@@ -203,13 +212,6 @@ function serveStatic(req, res, pathnameRaw) {
   fs.readFile(file, (err, buf) => {
     if (err) return send(res, 404, { error: 'not-found' });
     const mime = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
-    // index.html：部署 key 存在时注入（前端脚本带到 API 请求头）；SW 预缓存请求不带
-    if (rel === 'index.html' && CFG.apiAccessKey && req.headers['x-sw-precache'] !== '1') {
-      let html = buf.toString('utf-8');
-      const inject = `\n<script>window.__ZH_KEY=${JSON.stringify(CFG.apiAccessKey)};</script>\n`;
-      html = html.replace('<body>', '<body>\n<!-- 访问 key 由服务端运行时注入——源码与缓存中不写死 -->' + inject);
-      buf = Buffer.from(html, 'utf-8');
-    }
     res.writeHead(200, { 'content-type': mime, ...(rel === '/js/sw.js' ? { 'Service-Worker-Allowed': '/' } : {}) });   // v5：SW 脚本在 /js/ 下，允许其以 scope '/' 注册——无此头浏览器拒绝
     res.end(buf);
   });
@@ -245,11 +247,10 @@ const server = http.createServer(async (req, res) => {
       if (!CFG.zhipuKey) {
         return send(res, 503, { error: 'vision-unconfigured', msg: '未配置 ZHIPU_API_KEY——不能假装识别。填写 server/.env 后重启，或用 MOCK_VISION=1 演示模式跑流程。' });
       }
-      try { RLV.dayUsed++; return send(res, 200, await callGlmDetect(image)); }
-      catch (e1) {
-        try { return send(res, 200, await callGlmDetect(image)); }   // 模型偶发输出不稳：温和重试一次
-        catch (e2) { return send(res, 502, { error: 'vision-failed', msg: '视觉服务调用失败：' + (e2.message || e2) }); }
-      }
+      const budget = reserve('vision', CFG.visionDailyLimit);
+      if (budget !== true) return send(res, budget === false ? 429 : 503, { error: 'vision-budget', msg: '识别额度已用完或额度记录不可用；本次没有调用外部服务。' });
+      try { return send(res, 200, await callGlmDetect(image)); }
+      catch { return send(res, 502, { error: 'vision-failed', msg: '识别服务暂时不可用；本次已计入调用额度。请稍后手动重试。' }); }
     }
 
     if (u.pathname === '/api/weather/city-lookup' && req.method === 'GET') {
@@ -280,11 +281,13 @@ const server = http.createServer(async (req, res) => {
 
     return serveStatic(req, res, u.pathname);
   } catch (e) {
-    return send(res, 500, { error: 'server-error', msg: String((e && e.message) || e) });
+    if (e instanceof SyntaxError) return send(res, 400, { error: 'invalid-json', msg: '请求内容格式有误，请重新操作。' });
+    return send(res, 500, { error: 'server-error', msg: '服务暂时不可用，请稍后重试。' });
   }
 });
 
-server.listen(CFG.port, () => {
+server.listen(CFG.port, CFG.host, () => {
+  console.log(`LISTENING ${server.address().port}`);
   console.log(`植伴代理已启动: http://127.0.0.1:${CFG.port}`);
   console.log(`  静态前端: http://127.0.0.1:${CFG.port}/          手机同 Wi-Fi: http://<本机IP>:${CFG.port}`);
   console.log(`  联通检查: http://127.0.0.1:${CFG.port}/api/health`);

@@ -1,7 +1,7 @@
 {
   "name": "zhiban",
   "private": true,
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "植伴 — 中文家庭植物养护 PWA：单家庭 · 摆放位置 · 症状排查 · 整屋批量建档 · 真实天气。零构建静态应用（应用本体零 npm 依赖）+ 可选 Node 服务端代理；本文件仅用于测试依赖管理。",
   "type": "module",
   "scripts": {

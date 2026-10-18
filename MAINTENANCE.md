@@ -1,6 +1,6 @@
 # 维护与恢复 / Maintenance and recovery
 
-本文件为规范迭代候选，尚未提交或发布。源码可公开读取不等于安装、功能和发行物已验收。
+本文件说明更新、故障与恢复办法，不能单独作为发行验收证明。源码可公开读取不等于安装、功能和发行物已验收。
 
 ## 版本与后续 AI 修改
 
@@ -22,4 +22,8 @@ AI 修改使用独立分支和 PR，写明问题、最终行为、实际检查/�
 
 ## English essentials
 
-This is an unsubmitted maintenance candidate, not a release certificate. Use branches and reviewable PRs; record actual checks and limitations. Preserve existing tags/assets. Set the next version at merge and keep release references consistent. Back up source, local configuration and user data before upgrading; reverting code does not undo data migrations or external actions. Report sanitized reproductions through Issues, never work material or credentials. After each real release, review its public entry point as a newcomer in both languages, resolve blocking questions and recheck before acceptance. No independent-user validation is implied.
+This maintenance guide is not a release certificate. Use branches and reviewable PRs; record actual checks and limitations. Preserve existing tags/assets. Set the next version at merge and keep release references consistent. Back up source, local configuration and user data before upgrading; reverting code does not undo data migrations or external actions. Report sanitized reproductions through Issues, never work material or credentials. After each real release, review its public entry point as a newcomer in both languages, resolve blocking questions and recheck before acceptance. No independent-user validation is implied.
+
+## 5.1.0 访问与额度迁移
+
+更新前导出档案备份、备份旧程序和服务器环境配置；不要把这些私人备份上传GitHub。真实服务部署须新增至少32字符的随机访问口令，由使用者在设置页输入。默认仅本机监听；远程须HTTPS、隔离后端端口并设置服务商硬性预算。把USAGE_DIR放在持久卷；多个实例共享同一目录。额度记录损坏或锁遗留会拒绝调用，先停止所有实例、核对服务商用量，再由维护者处理；不要为绕过限制直接删除计数。回退旧代码会恢复已知的公开口令问题，故付费公网部署不得回退到旧版，应停用付费功能并保留数据。

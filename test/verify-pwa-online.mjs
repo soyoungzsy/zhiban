@@ -52,7 +52,7 @@ console.log('A 安装条件（manifest/图标/key 注入）');
     m.display === 'standalone' && m.start_url === '/' && m.icons.length >= 3 && m.icons.some(i => i.purpose === 'maskable') && /植伴/.test(m.name || ''),
     JSON.stringify({ name: m.name, icons: m.icons && m.icons.length }));
   const key = await p.evaluate(() => window.__ZH_KEY);
-  ok('A2 服务端向页面注入访问 key（非空；缓存版无 key 由 D3 佐证）', typeof key === 'string' && key.length > 0, `key 类型=${typeof key}`);
+  ok('A2 公开页面不会自动包含访问口令', key === undefined, `key 类型=${typeof key}`);
   const codes = await p.evaluate(async () => Promise.all(
     ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon-180.png', 'icons/favicon-32.png']
       .map(async u => [(await fetch(u)).status, u])));
@@ -85,7 +85,7 @@ console.log('C 付费接口 key 流动与真实天气连通');
   const r = await p.evaluate(async () => {
     const noKey = await fetch('/api/weather/city-lookup?name=杭州');
     const noBody = await noKey.json().catch(() => ({}));
-    const withKey = await fetch('/api/weather/city-lookup?name=杭州', { headers: { 'x-zh-key': window.__ZH_KEY } });
+    const withKey = await fetch('/api/weather/city-lookup?name=杭州', { headers: { 'x-zh-key': 'fictional-test-only-not-a-credential' } });
     const txt = (await withKey.text()).slice(0, 160);
     return { noKey: noKey.status, err: noBody.error, withKey: withKey.status, body: txt };
   });

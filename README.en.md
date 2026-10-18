@@ -16,7 +16,7 @@ Expect questions and observation suggestions. This does not create plant records
 
 If someone helps set up the app, first add a fictional plant manually, close the page and reopen it to check that the record remains. Photo recognition and weather are optional services requiring extra setup; relevant photos or location details may leave your device. Avoid faces, home addresses and work materials. Read the data notes before using them.
 
-The commands and hosting sections below are for helpers and developers. Current access protection has known gaps: do not connect paid services and expose the app to the public as-is. The **Issues** tab is a public question area; remove private/work information before posting.
+The commands and hosting sections below are for helpers and developers. Version 5.1.0 removes public password injection, requires explicit access credentials for live services and defaults to localhost. Remote live use needs HTTPS and provider spending limits. The **Issues** tab is a public question area; remove private/work information before posting.
 
 
 
@@ -30,7 +30,7 @@ For Chinese-speaking households caring for a few to dozens of plants, including 
 
 ## Quick start
 
-Install Node.js 18+ as documented by the project, then:
+Install Node.js 22+ as documented by the project, then:
 
 ```bash
 git clone https://github.com/soyoungzsy/zhiban.git
@@ -60,10 +60,20 @@ Plant records use browser localStorage and photos use IndexedDB. No account or c
 
 ## Public deployment security boundary
 
-Read [DEPLOY.md](DEPLOY.md), but do not treat its prior deployment claims as this review's approval. The current server injects API_ACCESS_KEY into publicly readable HTML, so this value is not effective identity authentication for public paid APIs. Forwarded-IP limits assume a trusted proxy, and in-memory budgets do not persist across instances/restarts. Configure real access control and spending protection and revalidate before public paid use. Personal mock testing is the recommended starting point.
+Read [DEPLOY.md](DEPLOY.md), but do not treat its prior deployment claims as this review's approval. The public page never contains the access password automatically. Users enter a separate access password in Settings for the current page only; provider credentials stay on the server. Limits use the actual connection address, ignoring forwarded-IP headers. Real attempts reserve durable daily quota before the network request, with no automatic retry; unavailable quota storage rejects the call. All replicas must share that storage; separate deployments do not share it. Keep a provider-side hard spending budget, use HTTPS remotely and isolate the backend port. Personal mock testing is the recommended starting point.
 
 ## Maintenance and validation
 
 Preserve source and export data before updating. Reverting code/Service Worker does not necessarily restore compatible data. Use the backup/restore controls and [maintenance guide](MAINTENANCE.md). Missing recognition generally means the proxy/provider is unconfigured; inspect the labeled service status rather than assuming real recognition. For browser-script failures, use the supported Chrome path or adapt the test configuration.
 
 The project documents `npm ci`, `npm test`, `npm run verify:v4` and `npm run verify:pwa`; runtime itself has no npm dependencies, while browser/test tooling does. Historical test counts in the Chinese README are prior claims, not results rerun by this documentation proposal. No new live-provider or mobile acceptance is claimed. See [CONTRIBUTING.md](CONTRIBUTING.md), existing REVIEW documents and [MIT license](LICENSE).
+
+## Sources and acknowledgements
+
+See [sources](SOURCES.md) for original authors, references, dependencies and licenses. AI rewriting does not establish original authorship; required third-party notices remain in applicable downloads.
+
+## Try the full app locally
+
+Download and extract Source code (zip) from [Releases](https://github.com/soyoungzsy/zhiban/releases). Install Node.js 22+ from [nodejs.org](https://nodejs.org/) if needed. Open start-demo.command on Mac or start-demo.cmd on Windows; do not bypass a system security warning. A helper can use the documented command instead. Open http://127.0.0.1:8438/?demo=1 and expect labelled sample plants. Add a fictional plant, refresh to check persistence, then export a backup in Settings. Stop with Control+C in the launcher window. Photo detection is explicitly fixed mock data; live services require separate accounts, a 32-character access password, HTTPS for remote use and provider-side spending limits. The page never contains the access password automatically; enter it manually in Settings for the current page only. Daily attempt counters persist on disk, but separate deployments need shared storage and provider hard budgets.
+
+Version: 5.1.0 · [Release / 固定下载](https://github.com/soyoungzsy/zhiban/releases/tag/v5.1.0)

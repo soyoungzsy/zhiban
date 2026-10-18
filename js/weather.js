@@ -1,3 +1,4 @@
+import { accessHeaders } from './access.js';
 // ============================================================
 // js/weather.js — 和风天气适配层（v4 §5）
 //
@@ -15,7 +16,7 @@
 
 const API_BASE = (typeof globalThis !== 'undefined' && globalThis.__zhibanApiBase) || '';
 /* v5 线上：访问 key 由服务端注入到 index.html；本地无 key 时不带头（server 不校验） */
-const zhKeyH = () => (typeof window !== 'undefined' && window.__ZH_KEY) ? { 'x-zh-key': window.__ZH_KEY } : {};
+const zhKeyH = accessHeaders;
 const CACHE_KEY = 'zhiban:weather-cache';
 const LIFE = { currentMin: 30, dailyMin: 360 };
 
