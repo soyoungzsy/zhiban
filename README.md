@@ -1,4 +1,4 @@
-# 植伴 · zhiban
+# Soya 植伴 · zhiban
 
 > 帮中文家庭管好已经种下的每一盆植物：按摆放位置建档、症状排查、看天建议、生成可打印的「五行养护小卡」。
 > **它不是植物百科，也不需要每天打卡。**
@@ -8,11 +8,13 @@
 [![Tests](https://img.shields.io/badge/tests-313%20assertions%20passed-2ea44f.svg)](#测试与质量保障)
 [![PWA](https://img.shields.io/badge/PWA-%E5%8F%AF%E5%8A%A0%E4%B8%BB%E5%B1%8F%E5%B9%95-8A2BE2.svg)](#快速开始)
 
-**一句话版本**：手机上打开的植物养护小应用——数据留在你自己设备上、无账号无云端；给每盆植物建档案、看本周该关注什么、叶子出问题勾症状查原因；能整屋拍照批量建档；能看真实天气调整建议；能生成挂在花盆上的五行小卡。
+**一句话版本**：手机上打开的植物养护小应用——档案默认保存在本机浏览器；启用识别或天气会请求相应服务，无账号和云同步；给每盆植物建档案、看本周该关注什么、叶子出问题勾症状查原因；能整屋拍照批量建档；能看真实天气调整建议；能生成挂在花盆上的五行小卡。
 
 | 首页 · 本周照顾重点 | 植物档案 · 五行小卡 |
 |---|---|
 | ![首页](docs/images/readme-home.png) | ![植物档案](docs/images/readme-plant.png) |
+
+[English](README.en.md) · [维护与恢复](MAINTENANCE.md)
 
 ## 目录
 
@@ -65,7 +67,7 @@
 前置：装好 [Node.js 18+](https://nodejs.org/)。无需任何密钥。
 
 ```bash
-git clone https://github.com/soyoungzsy6-ops/zhiban.git
+git clone https://github.com/soyoungzsy/zhiban.git
 cd zhiban
 MOCK_VISION=1 node server/server.js
 ```
@@ -107,7 +109,7 @@ node server/server.js                # 重启即为真实模式（密钥只放�
 
 | 现象 | 处理 |
 |---|---|
-| `EADDRINUSE` 端口被占 | `lsof -ti :8438 \| xargs kill`（残留服务进程），或换 `PORT=8440 node server/server.js` |
+| `EADDRINUSE` 端口被占 | 先换端口：`MOCK_VISION=1 PORT=8440 node server/server.js`，并用 8440 打开；若需停止旧服务，只停止自己确认启动的进程 |
 | verify 脚本报找不到 Chrome | 确认 `/Applications/Google Chrome.app` 存在；Windows/Linux 改 `test/verify-*.mjs` 顶部 `CHROME` 路径 |
 | 识别按钮提示"识别服务未启动" | 你用的是纯静态服务器（如 python http.server）——`node server/server.js` 起代理后即可 |
 | 纯静态也能用吗 | 能（python3 -m http.server 8437）：浏览/建档/排查/小卡全可用，只有识别与真实天气不可用 |
@@ -207,6 +209,10 @@ zhiban/
 - **浏览器级实测**：`verify-v4` 19 项（真键盘输入/批量建档全流程/天气降级）+ `verify-pwa` 23 项（PWA 安装/敏感文件 404/key 校验/离线能力/更新横幅）
 - **如实边界**：jsdom ≠ 真实布局（视觉与适老化结论以真机为准）；真实手机断网/微信内置浏览器等保留在真机复验清单（见 DEPLOY.md）
 - 本仓库发布候选在**干净环境全量复现通过**（clone → npm ci → 313+19+23 全绿）
+
+## 部署前安全边界
+
+默认只用于个人演示。当前服务端会把 API_ACCESS_KEY 注入访问者可读取的首页，因此它不能证明访问者身份，不能据此宣称付费接口已受有效认证保护。按 IP 的限制还依赖受信代理正确处理转发头；内存额度不能跨实例或重启持久化。正式公网付费调用前须配置真正的身份/访问控制与费用预算，并重新安全验收；不要把这个键当作第三方模型密钥，也不要公开部署凭据。
 
 ## 部署到公网
 
