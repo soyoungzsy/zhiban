@@ -26,3 +26,6 @@ screenshots/
 
 # ---- 私人开发指令（历史文档，不随仓库分发） ----
 植伴_*修改指令*.md
+
+# Durable paid-service usage ledger; never public
+server/.runtime/

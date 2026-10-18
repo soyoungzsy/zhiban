@@ -14,7 +14,7 @@ globalThis.window = dom.window;
 globalThis.document = dom.window.document;
 globalThis.history = dom.window.history;
 globalThis.location = dom.window.location;
-globalThis.__zhibanApiBase = 'http://127.0.0.1:8438';   // 真实代理（演示模式）
+globalThis.__zhibanApiBase = process.env.ZHIBAN_TEST_BASE || 'http://127.0.0.1:8438';   // 真实代理（演示模式）
 const realLS = dom.window.localStorage;
 globalThis.localStorage = realLS;
 
@@ -38,7 +38,7 @@ if (!home) { console.error('造家失败'); process.exit(2); }
 
 /* 真实代理演示模式在跑？（fetch 海端连接） */
 let health = null;
-try { health = await (await fetch('http://127.0.0.1:8438/api/health')).json(); } catch (e) { health = null; }
+try { health = await (await fetch(globalThis.__zhibanApiBase + '/api/health')).json(); } catch (e) { health = null; }
 check('BF0 8438 演示代理可达（vision.mode=mock 如实标注）', !!health && health.vision && health.vision.mode === 'mock', JSON.stringify(health && health.vision));
 
 /* 造景：两张原图 + 四处检测（两组疑似重复、一处待确认、一处未选） */

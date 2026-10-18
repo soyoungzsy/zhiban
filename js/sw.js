@@ -10,13 +10,13 @@
 //   · 更新策略：新版本只"待命"，顶部横幅提示、由用户点击后才切换刷新——
 //     绝不在用户编辑/批量识别过程中强制 reload
 // ============================================================
-const VERSION = 'zb-5.0.0-20261007';
+const VERSION = 'zb-5.1.0-20261018';
 const ASSETS = [
   '/', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/main.js', 'js/ui.js', 'js/db.js', 'js/store.js', 'js/home-model.js',
   'js/knowledge.js', 'js/city-db.js', 'js/plants-a.js', 'js/plants-b.js', 'js/plants-c.js',
   'js/engine.js', 'js/health-rules.js', 'js/services.js', 'js/vision.js', 'js/weather.js',
-  'js/example-data.js', 'js/sw.js', 'js/pwa.js',
+  'js/access.js', 'js/example-data.js', 'js/sw.js', 'js/pwa.js',
   'js/views/home.js', 'js/views/plant.js', 'js/views/add.js', 'js/views/health.js',
   'js/views/say.js', 'js/views/spaces.js', 'js/views/settings.js', 'js/views/batch.js',
   'icons/favicon-32.png', 'icons/apple-touch-icon-180.png',
@@ -27,7 +27,7 @@ self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const cache = await caches.open(VERSION);
     // 逐个预取：以 scope 解析为绝对 URL（SW 内相对路径基准是 sw.js 自身——曾把 css/... 解析成 /js/css/... 全 404）
-    // index.html 带预缓存标记：服务端不把访问 key 写进缓存版；任一失败则本次放弃（不做空缓存假成功）
+    // 所有公开静态文件均不包含访问口令；任一失败则本次放弃（不做空缓存假成功）
     await Promise.all(ASSETS.map(async a => {
       const rel = (a === '/' || a === 'index.html') ? 'index.html' : a;
       const abs = new URL(rel, self.registration.scope).href;

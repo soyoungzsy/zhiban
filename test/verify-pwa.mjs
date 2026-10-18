@@ -1,7 +1,7 @@
 // ============================================================
 // test/verify-pwa.mjs — PWA 与线上安全行为验证（v5 轮）
 // 运行前提（本地"线上形态"实例）：
-//   API_ACCESS_KEY=test123 MOCK_VISION=1 VISION_PER_MIN=6 VISION_DAILY_LIMIT=999 PORT=8439 node server/server.js
+//   API_ACCESS_KEY=fictional-test-only-not-a-credential MOCK_VISION=1 VISION_PER_MIN=6 VISION_DAILY_LIMIT=999 PORT=8439 node server/server.js
 // 运行：node test/verify-pwa.mjs
 //
 // 覆盖：A 安装条件（manifest/图标/key 服务端注入）
@@ -28,7 +28,7 @@ const ok = (name, cond, note = '') => {
 // 联通与模式确认
 let h = null;
 try { h = await (await fetch(BASE + '/api/health')).json(); } catch (e) {}
-if (!h || h.vision.mode !== 'mock') { console.error('请先启动：API_ACCESS_KEY=test123 MOCK_VISION=1 PORT=8439 node server/server.js'); process.exit(2); }
+if (!h || h.vision.mode !== 'mock') { console.error('请先启动：API_ACCESS_KEY=fictional-test-only-not-a-credential MOCK_VISION=1 PORT=8439 node server/server.js'); process.exit(2); }
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--no-first-run'] });
 async function fresh(hash = '/') {
@@ -49,7 +49,7 @@ console.log('A 安装条件（manifest/图标/key 注入）');
     m.display === 'standalone' && (m.start_url === '/' || m.start_url === './') && m.icons.length >= 3 && m.icons.some(i => i.purpose === 'maskable'),
     JSON.stringify(m.icons && m.icons.length));
   const key = await p.evaluate(() => window.__ZH_KEY);
-  ok('A2 服务端向页面注入访问 key（源码与缓存不写死）', key === 'test123', `key=${key}`);
+  ok('A2 公开页面不会自动包含访问口令', key === undefined, `key=${key}`);
   const codes = await p.evaluate(async () => Promise.all(
     ['icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon-180.png', 'icons/favicon-32.png']
       .map(async u => [(await fetch(u)).status, u])));
@@ -82,7 +82,7 @@ console.log('C 付费接口 key 流动');
   const r = await p.evaluate(async () => {
     const noKey = await fetch('/api/vision/detect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ image: 'data:image/png;base64,iVBORw0KGgo=' }) });
     const noBody = await noKey.json().catch(() => ({}));
-    const withKey = await fetch('/api/vision/detect', { method: 'POST', headers: { 'content-type': 'application/json', 'x-zh-key': window.__ZH_KEY }, body: JSON.stringify({ image: 'data:image/png;base64,iVBORw0KGgo=' }) });
+    const withKey = await fetch('/api/vision/detect', { method: 'POST', headers: { 'content-type': 'application/json', 'x-zh-key': 'fictional-test-only-not-a-credential' }, body: JSON.stringify({ image: 'data:image/png;base64,iVBORw0KGgo=' }) });
     return { noKey: noKey.status, err: noBody.error, withKey: withKey.status };
   });
   ok('C1 无 key → 401 unauthorized（服务端强制校验）', r.noKey === 401 && r.err === 'unauthorized', JSON.stringify(r));

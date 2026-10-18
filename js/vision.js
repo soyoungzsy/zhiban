@@ -1,3 +1,4 @@
+import { accessHeaders } from './access.js';
 // ============================================================
 // js/vision.js — 视觉适配层（v4 §2 / §3）
 //
@@ -26,7 +27,7 @@ export const ARCHIVE_MAX_SIDE = 1024; // 存档原图长边——批量建档的
 /** 测试/特殊部署可注入 API 基址；默认同源。 */
 const API_BASE = (typeof globalThis !== 'undefined' && globalThis.__zhibanApiBase) || '';
 /* v5 线上：访问 key 由服务端注入到 index.html；本地无 key 时不带头（server 不校验） */
-const zhKeyH = () => (typeof window !== 'undefined' && window.__ZH_KEY) ? { 'x-zh-key': window.__ZH_KEY } : {};
+const zhKeyH = accessHeaders;
 
 /** 联通检查：vision/weather 凭证状态如实回报；服务未启动返回 null（离线）。 */
 export async function visionHealth() {

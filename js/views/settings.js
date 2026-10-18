@@ -1,3 +1,4 @@
+import { setAccessKey, clearAccessKey } from '../access.js';
 // ============================================================
 // views/settings.js — 设置（v3）
 //
@@ -38,7 +39,7 @@ export function render(root) {
           </div>
           <span class="sr-status ${STATUS_CLS(p.status)}">${esc(p.status)}</span>
         </div>`).join('')}
-      <div class="tiny mt8">接入真实服务时，密钥只放服务端、不进浏览器；本版没有任何云端调用。</div>
+      <div class="tiny mt8">接入真实服务时，密钥只放服务端、不进浏览器；只有启用识别或天气时才请求所选服务；第三方留存规则各自适用。</div>
     </div>
 
     ${corrupt ? `
@@ -73,10 +74,13 @@ export function render(root) {
       <div class="sm"><span class="k">识别</span><span class="v">用「整屋照片建档」时，<b>照片会发送</b>到你部署的这一个服务，再由它转发给视觉模型（智谱 GLM）做识别——发送的是压缩后的分析图，仅用于当次识别，服务端不存档不作他用。<b>不上传公开图床。</b></span></div>
       <div class="sm"><span class="k">天气</span><span class="v">实况/预报需联网：把<b>城市代表坐标</b>（不是你的实时定位）发到你部署的服务并转发和风天气获取。打开首页会自动刷新一次缓存（城市已确认时）。</span></div>
       <div class="sm"><span class="k">照片时间</span><span class="v">压缩后本机分层保存；文件时间仅作参考并明示局限，不默认当作实拍时间。</span></div>
-      <div class="sm"><span class="k">语音</span><span class="v">只在你点「开始说」时调用浏览器自带识别，可改文字；音频与识别结果不进任何外部服务。</span></div>
+      <div class="sm"><span class="k">语音</span><span class="v">只在你点「开始说」时调用浏览器自带识别，可改文字；浏览器可能调用其语音服务；是否离线由浏览器决定，请勿口述私人或工作信息。</span></div>
       <div class="sm"><span class="k">定位</span><span class="v">仅用于由你确认的城市候选，<b>坐标从不保存</b>；单家庭下城市只在「摆放位置」里手动改，不随手机移动变化。</span></div>
       <div class="sm"><span class="k">占用</span><span class="v">档案约 ${kb > 0 ? kb + ' KB' : '未知'}；照片空间跟随设备配额（IndexedDB 通常远大于 5MB）。写入失败会明确提示，不静默丢数据。</span></div>
     </div>
+
+    <div class="section-h"><h2>连接识别与天气服务</h2></div>
+    <div class="card"><p>只有部署人设置了访问口令时才需要填写。请通过可信渠道向部署人获取；不要填模型或天气服务的密钥。远程连接必须使用 HTTPS 安全网址。</p><label for="s-access">访问口令</label><input id="s-access" type="password" autocomplete="off"><button class="btn btn-primary" id="s-access-set">本次打开使用</button><button class="btn btn-outline" id="s-access-clear">忘记口令</button><p class="tiny">口令仅留在当前页面内存，刷新后需要重新输入。不会写进备份或浏览器存储。</p></div>
 
     <div class="section-h"><h2>备份与恢复</h2><span class="tiny">导出一个文件，需要时再恢复</span></div>
     <div class="card">
@@ -114,11 +118,14 @@ export function render(root) {
 
     <div class="section-h"><h2>关于</h2></div>
     <div class="card">
-      <div class="sm"><span class="k">版本</span><span class="v">植伴 v5.0 · 整屋批量建档 · 线上主屏幕版（单家庭/症状排查/天气接入延续 v3/v4）</span></div>
+      <div class="sm"><span class="k">版本</span><span class="v">Soya 植伴 v5.1.0 · 整屋批量建档 · 线上主屏幕版（单家庭/症状排查/天气接入延续 v3/v4）</span></div>
       <div class="sm"><span class="k">本版变化</span><span class="v">单家庭收敛（旧多家庭数据自动归档可找回）；轻量摆放位置一次录入多盆复用并真正影响建议；首页位置筛选；「哪里不对」症状排查为正式主路径；照片 IndexedDB 分层与全量备份；白掌/月季错误养护推断修正。红线不变：无浇水账本、无打卡、无倒计时。</span></div>
       <div class="sm"><span class="k">交付形式</span><span class="v">手机优先的网页应用（PWA，可加到手机主屏幕离线查看档案）；部署与授权说明见 project 目录 REVIEW_PWA 与 DEPLOY 文档。</span></div>
     </div>
   `;
+
+  $('#s-access-set', root).addEventListener('click', () => { try { setAccessKey($('#s-access', root).value); $('#s-access', root).value = ''; toast('已设置本次访问口令，请重试识别或天气'); } catch (e) { $('#s-access', root).value = ''; toast(e.message); } });
+  $('#s-access-clear', root).addEventListener('click', () => { clearAccessKey(); $('#s-access', root).value = ''; toast('已忘记访问口令'); });
 
   /* 备份导出 */
   $('#s-export', root).addEventListener('click', async () => {
